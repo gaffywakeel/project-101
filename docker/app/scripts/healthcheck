@@ -1,0 +1,24 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+STATUS="supervisorctl -c /var/supervisord.conf status"
+PREFIX=server
+
+if [ "$WORK_PHP_FPM" == "true" ]; then
+    eval "$STATUS" "$PREFIX:php-fpm" || exit 1
+fi
+
+if [ "$WORK_OCTANE" == "true" ]; then
+    eval "$STATUS" "$PREFIX:octane" || exit 1
+fi
+
+if [ "$WORK_WEBSOCKET" == "true" ]; then
+    eval "$STATUS" "$PREFIX:websocket" || exit 1
+fi
+
+if [ "$WORK_QUEUE" == "true" ]; then
+    eval "$STATUS" "$PREFIX:queue_00" || exit 1
+    eval "$STATUS" "$PREFIX:queue_01" || exit 1
+    eval "$STATUS" "$PREFIX:queue_02" || exit 1
+    eval "$STATUS" "$PREFIX:queue_03" || exit 1
+fi

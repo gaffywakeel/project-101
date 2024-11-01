@@ -1,0 +1,44 @@
+<?php
+
+namespace App\Notifications;
+
+use App\Models\PaymentTransaction;
+use App\Notifications\Traits\Notifier;
+use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Notifications\Notification;
+
+class PaymentCredit extends Notification implements ShouldQueue
+{
+    use Queueable, Notifier;
+
+    /**
+     * Payment transaction
+     *
+     * @var PaymentTransaction
+     */
+    protected $transaction;
+
+    /**
+     * Create a new notification instance.
+     *
+     * @return void
+     */
+    public function __construct(PaymentTransaction $transaction)
+    {
+        $this->transaction = $transaction;
+    }
+
+    /**
+     * Replacement parameters and Values
+     */
+    protected function parameters($notifiable): array
+    {
+        return [
+            'value' => $this->transaction->value->getValue(),
+            'formatted_value' => $this->transaction->formatted_value,
+            'currency' => $this->transaction->account->currency,
+            'description' => $this->transaction->description,
+        ];
+    }
+}

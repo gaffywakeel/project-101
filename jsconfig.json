@@ -1,0 +1,26 @@
+{
+    "compilerOptions": {
+        "target": "es6",
+        "module": "commonjs",
+        "baseUrl": "resources/js",
+        "paths": {
+            "@/assets/*": ["./assets/*"],
+            "@/components/*": ["./components/*"],
+            "@/contexts/*": ["./contexts/*"],
+            "@/hooks/*": ["./hooks/*"],
+            "@/layouts/*": ["./layouts/*"],
+            "@/middleware/*": ["./middleware/*"],
+            "@/models/*": ["./models/*"],
+            "@/pages/*": ["./pages/*"],
+            "@/redux/*": ["./redux/*"],
+            "@/router/*": ["./router/*"],
+            "@/services/*": ["./services/*"],
+            "@/support/*": ["./support/*"],
+            "@/theme/*": ["./theme/*"],
+            "@/utils/*": ["./utils/*"],
+            "@/scss/*": ["../scss/*"],
+            "@/static/*": ["../static/*"]
+        }
+    },
+    "exclude": ["node_modules"]
+}

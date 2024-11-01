@@ -1,0 +1,60 @@
+name: Deploy
+
+on:
+  workflow_dispatch:
+    inputs:
+      directory:
+        type: string
+        description: 'Directory (cryptitan)'
+        default: 'cryptitan'
+      database:
+        type: boolean
+        description: 'Reset database'
+        default: false
+
+jobs:
+  deployment:
+    concurrency: deployment
+    name: Deploy to remote server.
+
+    runs-on: ubuntu-latest
+
+    env:
+      DATABASE: '${{ github.event.inputs.database }}'
+      WORKDIR: '${{ github.event.inputs.directory }}'
+      AUTH_SERVER_URL: 'https://${{ secrets.AUTH_SERVER_USERNAME }}:${{ secrets.AUTH_SERVER_PASSWORD }}@github.com'
+
+    steps:
+      - name: Deploy to remote server via SSH
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.REMOTE_HOST }}
+          username: ${{ secrets.REMOTE_USERNAME }}
+          key: ${{ secrets.REMOTE_KEY }}
+          script_stop: true
+          command_timeout: 120m
+          timeout: 60s
+
+          envs: >
+            DATABASE,
+            WORKDIR,
+            AUTH_SERVER_URL,
+            GITHUB_REPOSITORY,
+            GITHUB_SHA
+
+          script: |
+            REPOSITORY_URL="$AUTH_SERVER_URL/$GITHUB_REPOSITORY"
+            
+            if [ ! -d "$WORKDIR" ]; then git clone "$REPOSITORY_URL" "$WORKDIR"; fi
+
+            cd "$WORKDIR" || exit 1
+            git remote set-url origin "$REPOSITORY_URL"
+            git fetch origin && git checkout "$GITHUB_SHA"
+
+            ./cryptitan initialize
+            ./cryptitan build application nginx
+            ./cryptitan up -d --force-recreate --wait application
+            
+            if [ "$DATABASE" == "true" ]; then ./cryptitan artisan migrate:fresh --force --seed; fi
+            
+            ./cryptitan up -d --no-deps nginx

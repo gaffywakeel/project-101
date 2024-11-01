@@ -1,0 +1,55 @@
+#!/usr/bin/env bash
+trap exit SIGINT SIGTERM
+set -euo pipefail
+
+usermod -ou "$HOST_UID" server
+groupmod -og "$HOST_GID" server
+
+RUN="gosu server"
+
+eval "$RUN" php artisan schedule:clear-cache
+
+if [ ! -e "$INSTALLED_FILE" ]; then
+	eval "$RUN" mkdir -p storage/backups
+	eval "$RUN" php artisan view:clear
+	eval "$RUN" php artisan config:clear
+	eval "$RUN" php artisan route:clear
+
+	if [ "$APP_ENV" == "production" ]; then
+	    eval "$RUN" npm ci --omit=dev
+	    eval "$RUN" composer install -o --no-dev
+
+		# Make backup of .env file
+		ENV_BACKUP_PATH="storage/backups/.env.backup."
+		eval "$RUN" rm -f "$(ls -td ${ENV_BACKUP_PATH}* | awk 'NR>5')"
+        eval "$RUN" cp .env "${ENV_BACKUP_PATH}$(date +%s)"
+
+        eval "$RUN" npm run build
+
+		eval "$RUN" php artisan view:cache
+		eval "$RUN" php artisan config:cache
+		eval "$RUN" php artisan route:cache
+	fi
+
+	eval "$RUN" php artisan storage:link
+
+	if [ -e "/var/scripts/install.sh" ]; then
+        eval "$RUN" /var/scripts/install.sh
+    fi
+
+	echo ":$(date)" >"$INSTALLED_FILE"
+fi
+
+if [ -e "/var/scripts/start.sh" ]; then
+	eval "$RUN" /var/scripts/start.sh
+fi
+
+if [ "$APP_SCHEDULE" == "true" ]; then
+	eval "$RUN" crontab /var/schedule.cron
+	service cron restart
+fi
+
+exec /usr/bin/supervisord --nodaemon \
+	--configuration=/var/supervisord.conf \
+	--user=server
+

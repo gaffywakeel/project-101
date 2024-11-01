@@ -1,0 +1,8 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+CONTAINER="$(dirname -- "$0")/container"
+
+[ -n "$(git rev-parse -q --verify MERGE_HEAD)" ] && exit 0;
+
+eval "$CONTAINER" npx lint-staged --quiet

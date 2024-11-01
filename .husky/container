@@ -1,0 +1,22 @@
+#!/usr/bin/env sh
+
+PROJECT_NAME="$(basename -- "$(pwd)")"
+IMAGE_NAME="${PROJECT_NAME}:local"
+
+if [ -z "$(docker images -q "$IMAGE_NAME" 2>/dev/null)" ]; then
+  echo "Error: Image [$IMAGE_NAME] doesn't exist." >&2 && exit 1
+fi
+
+CONTAINER_EXEC="docker run --rm \
+--entrypoint '' \
+--env GIT_CONFIG_COUNT=1 \
+--env GIT_CONFIG_KEY_0=safe.directory \
+--env GIT_CONFIG_VALUE_0=* \
+--volume $HOME/.npm:/tmp/.npm \
+--volume $HOME/.composer:/tmp/.composer \
+--volume $(pwd):/usr/src/app \
+--workdir /usr/src/app \
+--user $(id -u):$(id -g) \
+${IMAGE_NAME}"
+
+eval "$CONTAINER_EXEC" "$@"
