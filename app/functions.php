@@ -22,16 +22,7 @@ use Psr\Container\NotFoundExceptionInterface;
 use Spatie\Valuestore\Valuestore as ValueStore;
 
 if (!function_exists('valueStore')) {
-    /**
-     * Get the value store
-     *
-     * @param  null  $key
-     * @param  null  $default
-     * @return ValueStore|mixed
-     *
-     * @throws ContainerExceptionInterface
-     * @throws NotFoundExceptionInterface
-     */
+  
     function valueStore($key = null, $default = null)
     {
         if ($key === null) {
